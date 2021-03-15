@@ -1,0 +1,34 @@
+object Form1: TForm1
+  Left = 909
+  Height = 486
+  Top = 175
+  Width = 656
+  Caption = 'Archivator'
+  Menu = MainMenu1
+  OnCreate = FormCreate
+  LCLVersion = '2.0.10.0'
+  object MainMenu1: TMainMenu
+    Left = 89
+    Top = 92
+    object MenuItem1: TMenuItem
+      Caption = '&Файл'
+      object MenuItem5: TMenuItem
+        Caption = '&Открыть архив'
+      end
+      object MenuItemExit: TMenuItem
+        Caption = 'В&ыход'
+        OnClick = MenuItemExitClick
+      end
+    end
+    object MenuItem2: TMenuItem
+      Caption = '&Архвация'
+    end
+    object MenuItem3: TMenuItem
+      Caption = '&Справка'
+      object MenuItemAbout: TMenuItem
+        Caption = '&О программе'
+        OnClick = MenuItemAboutClick
+      end
+    end
+  end
+end

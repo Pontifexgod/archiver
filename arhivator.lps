@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="11"/>
+    <BuildModes Active="Default"/>
+    <Units Count="4">
+      <Unit0>
+        <Filename Value="arhivator.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="1"/>
+        <CursorPos X="45" Y="19"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="unit1.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form1"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="MainUnit"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="10" Y="2"/>
+        <UsageCount Value="20"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="unitabout.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="FormAbout"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="UnitAbout"/>
+        <TopLine Value="15"/>
+        <CursorPos X="3" Y="43"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="MainUnit.pas"/>
+        <ComponentName Value="FormMain"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="49"/>
+        <CursorPos Y="63"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit3>
+    </Units>
+    <JumpHistory Count="19" HistoryIndex="18">
+      <Position1>
+        <Filename Value="unitabout.pas"/>
+        <Caret Line="3" Column="7"/>
+      </Position1>
+      <Position2>
+        <Filename Value="unitabout.pas"/>
+        <Caret Line="5" Column="15"/>
+      </Position2>
+      <Position3>
+        <Filename Value="MainUnit.pas"/>
+        <Caret Line="21" Column="28"/>
+      </Position3>
+      <Position4>
+        <Filename Value="unitabout.pas"/>
+        <Caret Line="7" Column="14"/>
+      </Position4>
+      <Position5>
+        <Filename Value="unitabout.pas"/>
+        <Caret Line="35" Column="3" TopLine="7"/>
+      </Position5>
+      <Position6>
+        <Filename Value="unitabout.pas"/>
+        <Caret Line="34" Column="3" TopLine="6"/>
+      </Position6>
+      <Position7>
+        <Filename Value="unitabout.pas"/>
+        <Caret Line="35" Column="3" TopLine="6"/>
+      </Position7>
+      <Position8>
+        <Filename Value="arhivator.lpr"/>
+        <Caret Line="18" Column="35"/>
+      </Position8>
+      <Position9>
+        <Filename Value="unitabout.pas"/>
+        <Caret Line="35" Column="3" TopLine="6"/>
+      </Position9>
+      <Position10>
+        <Filename Value="unitabout.pas"/>
+        <Caret Line="38" Column="3" TopLine="6"/>
+      </Position10>
+      <Position11>
+        <Filename Value="MainUnit.pas"/>
+        <Caret Line="37" Column="32" TopLine="24"/>
+      </Position11>
+      <Position12>
+        <Filename Value="MainUnit.pas"/>
+        <Caret Line="39" Column="32" TopLine="25"/>
+      </Position12>
+      <Position13>
+        <Filename Value="MainUnit.pas"/>
+        <Caret Line="67" Column="5" TopLine="35"/>
+      </Position13>
+      <Position14>
+        <Filename Value="MainUnit.pas"/>
+        <Caret Line="50" Column="3" TopLine="35"/>
+      </Position14>
+      <Position15>
+        <Filename Value="MainUnit.pas"/>
+        <Caret Line="51" Column="3" TopLine="36"/>
+      </Position15>
+      <Position16>
+        <Filename Value="MainUnit.pas"/>
+        <Caret Line="53" Column="3" TopLine="38"/>
+      </Position16>
+      <Position17>
+        <Filename Value="MainUnit.pas"/>
+        <Caret Line="58" Column="3" TopLine="38"/>
+      </Position17>
+      <Position18>
+        <Filename Value="MainUnit.pas"/>
+        <Caret Line="77" TopLine="48"/>
+      </Position18>
+      <Position19>
+        <Filename Value="MainUnit.pas"/>
+        <Caret Line="54" Column="3" TopLine="49"/>
+      </Position19>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes Count="0" ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>
