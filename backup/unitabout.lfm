@@ -1,7 +1,7 @@
 object FormAbout: TFormAbout
-  Left = 1433
+  Left = 1076
   Height = 240
-  Top = 436
+  Top = 327
   Width = 320
   BorderStyle = bsDialog
   Caption = 'О программе'
@@ -9,30 +9,12 @@ object FormAbout: TFormAbout
   ClientWidth = 320
   Position = poMainFormCenter
   LCLVersion = '2.0.10.0'
-  object Label1: TLabel
-    Left = 96
-    Height = 15
-    Top = 16
-    Width = 125
-    Caption = 'Программа архиватор'
-    ParentColor = False
-  end
-  object BitBtn1: TBitBtn
-    Left = 96
-    Height = 30
-    Top = 192
-    Width = 128
-    Default = True
-    DefaultCaption = True
-    Kind = bkOK
-    ModalResult = 1
-    TabOrder = 0
-  end
   object Image1: TImage
     Left = 0
-    Height = 90
-    Top = 8
-    Width = 90
+    Height = 240
+    Top = 0
+    Width = 320
+    Align = alClient
     OnClick = Image1Click
     Picture.Data = {
       1754506F727461626C654E6574776F726B4772617068696366D4020089504E47
@@ -5834,5 +5816,31 @@ object FormAbout: TFormAbout
       6082
     }
     Stretch = True
+  end
+  object Label1: TLabel
+    Left = 96
+    Height = 15
+    Top = 16
+    Width = 125
+    Caption = 'Программа архиватор'
+    Font.CharSet = RUSSIAN_CHARSET
+    Font.Color = clYellow
+    Font.Height = -12
+    Font.Name = 'Segoe UI'
+    Font.Pitch = fpVariable
+    Font.Quality = fqDraft
+    ParentColor = False
+    ParentFont = False
+  end
+  object BitBtn1: TBitBtn
+    Left = 96
+    Height = 30
+    Top = 192
+    Width = 128
+    Default = True
+    DefaultCaption = True
+    Kind = bkOK
+    ModalResult = 1
+    TabOrder = 0
   end
 end

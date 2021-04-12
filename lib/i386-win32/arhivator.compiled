@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Compiler Value="C:\lazarus\fpc\3.2.0\bin\i386-win32\fpc.exe" Date="1357350198"/>
-  <Params Value=" -MObjFPC -Scghi -O1 -g -gl -WG -l -vewnhibq -FiC:\!\arhivator\lib\i386-win32 -FuC:\lazarus\lcl\units\i386-win32\win32 -FuC:\lazarus\lcl\units\i386-win32 -FuC:\lazarus\components\lazutils\lib\i386-win32 -FuC:\lazarus\packager\units\i386-win32 -FuC:\!\arhivator\ -FUC:\!\arhivator\lib\i386-win32\ -FEC:\!\arhivator\ -oC:\!\arhivator\arhivator.exe -dLCL -dLCLwin32 arhivator.lpr"/>
+  <Compiler Value="C:\FPC\3.2.0\bin\i386-Win32\fpc.exe" Date="1355043128"/>
+  <Params Value=" -MObjFPC -Scghi -O1 -g -gl -WG -l -vewnhibq -FiC:\!\arhivator\lib\i386-win32 -FiC:\!\arhivator\zlib -FuC:\lazarus\fpc\3.2.0\source\packages\paszlib\src -FuC:\!\arhivator\zlib -FuC:\lazarus\lcl\units\i386-win32\win32 -FuC:\lazarus\lcl\units\i386-win32 -FuC:\lazarus\components\lazutils\lib\i386-win32 -FuC:\lazarus\packager\units\i386-win32 -FuC:\!\arhivator\ -FUC:\!\arhivator\lib\i386-win32\ -FEC:\!\arhivator\ -oC:\!\arhivator\arhivator.exe -dLCL -dLCLwin32 arhivator.lpr"/>
+  <Complete Value="False"/>
 </CONFIG>

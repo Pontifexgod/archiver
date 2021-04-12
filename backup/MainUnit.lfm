@@ -1,19 +1,45 @@
 object FormMain: TFormMain
-  Left = 909
+  Left = 714
   Height = 486
-  Top = 175
+  Top = 322
   Width = 656
   Caption = 'Archivator'
+  ClientHeight = 466
+  ClientWidth = 656
   Menu = MainMenu1
   OnCreate = FormCreate
   LCLVersion = '2.0.10.0'
+  object TreeView1: TTreeView
+    Left = 15
+    Height = 352
+    Top = 8
+    Width = 241
+    TabOrder = 0
+  end
+  object ListView1: TListView
+    Left = 264
+    Height = 352
+    Top = 8
+    Width = 266
+    Columns = <>
+    TabOrder = 1
+  end
   object MainMenu1: TMainMenu
     Left = 592
     object MenuItem1: TMenuItem
       Caption = '&Файл'
+      object MenuItemCreateArchive: TMenuItem
+        Caption = 'Создать архив'
+      end
       object MenuItemOpenArchive: TMenuItem
         Caption = '&Открыть архив'
         OnClick = MenuItemOpenArchiveClick
+      end
+      object MenuItemSaveArchive: TMenuItem
+        Caption = '&Сохранить архив'
+      end
+      object MenuItem4: TMenuItem
+        Caption = '-'
       end
       object MenuItemExit: TMenuItem
         Caption = 'В&ыход'
@@ -21,14 +47,28 @@ object FormMain: TFormMain
       end
     end
     object MenuItem2: TMenuItem
-      Caption = '&Архвация'
+      Caption = '&Архивация'
       OnClick = MenuItem2Click
       object MenuItemAppent: TMenuItem
         Caption = '&Добавить файл'
+        OnClick = MenuItemAppentClick
+      end
+      object MenuItemAddDirectory: TMenuItem
+        Caption = 'Добавить папку'
+      end
+      object MenuItemDelete: TMenuItem
+        Caption = 'Удалить...'
       end
       object MenuItemSettings: TMenuItem
         Caption = '&Настройки'
         OnClick = MenuItemSettingsClick
+      end
+      object MenuItem6: TMenuItem
+        Caption = '-'
+      end
+      object MenuItemCompressDirectory: TMenuItem
+        Caption = 'Архивировать папку'
+        OnClick = MenuItemCompressDirectoryClick
       end
     end
     object MenuItem3: TMenuItem
@@ -77,5 +117,12 @@ object FormMain: TFormMain
   end
   object OpenDialog1: TOpenDialog
     Left = 628
+  end
+  object SelectDirectoryDialog1: TSelectDirectoryDialog
+    FileName = 'C:\!\arhivator\zlib'
+    Filter = 'Архив Zlib|*.zlib'
+    InitialDir = 'C:\!\arhivator\'
+    Left = 592
+    Top = 48
   end
 end
