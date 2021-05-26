@@ -1,28 +1,106 @@
 object FormMain: TFormMain
-  Left = 895
-  Height = 486
-  Top = 443
-  Width = 656
+  Left = 1071
+  Height = 383
+  Top = 386
+  Width = 693
   Caption = 'Archivator'
-  ClientHeight = 466
-  ClientWidth = 656
+  ClientHeight = 363
+  ClientWidth = 693
+  Constraints.MinHeight = 340
+  Constraints.MinWidth = 500
   Menu = MainMenu1
-  OnCreate = FormCreate
-  LCLVersion = '2.0.10.0'
-  object TreeView1: TTreeView
-    Left = 15
-    Height = 382
-    Top = 16
-    Width = 337
+  OnActivate = FormActivate
+  Position = poScreenCenter
+  LCLVersion = '2.0.12.0'
+  object Panel1: TPanel
+    Left = 8
+    Height = 321
+    Top = 8
+    Width = 575
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    ClientHeight = 321
+    ClientWidth = 575
     TabOrder = 0
+    object Splitter1: TSplitter
+      Left = 1
+      Height = 319
+      Top = 1
+      Width = 6
+    end
+    object FilesList: TListView
+      Left = 7
+      Height = 319
+      Top = 1
+      Width = 567
+      Align = alClient
+      AutoWidthLastColumn = True
+      Columns = <      
+        item
+          AutoSize = True
+          Caption = 'Имя файла'
+          Width = 77
+        end      
+        item
+          Alignment = taRightJustify
+          AutoSize = True
+          Caption = 'Размер'
+          Width = 55
+        end      
+        item
+          AutoSize = True
+          Caption = 'Дата и время'
+          Width = 87
+        end      
+        item
+          Caption = 'Путь'
+          Width = 344
+        end      
+        item
+          Caption = 'Полное имя'
+        end      
+        item
+          Caption = 'В архиве'
+        end>
+      GridLines = True
+      MultiSelect = True
+      RowSelect = True
+      TabOrder = 1
+      ViewStyle = vsReport
+      OnDragDrop = FilesListDragDrop
+      OnEndDrag = FilesListEndDrag
+      OnSelectItem = FilesListSelectItem
+      OnStartDrag = FilesListStartDrag
+    end
+  end
+  object StatusBar1: TStatusBar
+    Left = 0
+    Height = 23
+    Top = 340
+    Width = 693
+    Panels = <>
   end
   object MainMenu1: TMainMenu
     Left = 592
     object MenuItem1: TMenuItem
       Caption = '&Файл'
+      object MenuItemCreateArchive: TMenuItem
+        Caption = 'Создать архив'
+        OnClick = MenuItemCreateArchiveClick
+      end
       object MenuItemOpenArchive: TMenuItem
-        Caption = '&Открыть архив'
+        Caption = '&Открыть архив...'
         OnClick = MenuItemOpenArchiveClick
+      end
+      object MenuItemSaveArchive: TMenuItem
+        Caption = '&Сохранить архив'
+        OnClick = MenuItemSaveArchiveClick
+      end
+      object MenuItemSaveArchiveAs: TMenuItem
+        Caption = 'Сохранить архив как...'
+        OnClick = MenuItemSaveArchiveAsClick
+      end
+      object MenuItem4: TMenuItem
+        Caption = '-'
       end
       object MenuItemExit: TMenuItem
         Caption = 'В&ыход'
@@ -31,18 +109,30 @@ object FormMain: TFormMain
     end
     object MenuItem2: TMenuItem
       Caption = '&Архивация'
-      OnClick = MenuItem2Click
-      object MenuItemAppent: TMenuItem
+      object MenuItemAppendFile: TMenuItem
         Caption = '&Добавить файл'
-        OnClick = MenuItemAppentClick
+        OnClick = MenuItemAppendFileClick
       end
-      object MenuItemCompressDirectory: TMenuItem
-        Caption = 'Архивировать папку'
-        OnClick = MenuItemCompressDirectoryClick
+      object MenuItemAddDirectory: TMenuItem
+        Caption = 'Добавить папку'
+        OnClick = MenuItemAddDirectoryClick
+      end
+      object MenuItemDelete: TMenuItem
+        Caption = 'Удалить...'
       end
       object MenuItemSettings: TMenuItem
         Caption = '&Настройки'
-        OnClick = MenuItemSettingsClick
+      end
+    end
+    object MenuItem5: TMenuItem
+      Caption = 'Распаковка'
+      object MenuItemDecompressSelected: TMenuItem
+        Caption = 'Выделенные файлы'
+        OnClick = MenuItemDecompressSelectedClick
+      end
+      object MenuItemDecompressAllFiles: TMenuItem
+        Caption = 'Все файлы'
+        OnClick = MenuItemDecompressAllFilesClick
       end
     end
     object MenuItem3: TMenuItem
@@ -90,13 +180,20 @@ object FormMain: TFormMain
     end
   end
   object OpenDialog1: TOpenDialog
-    Left = 628
-  end
-  object SelectDirectoryDialog1: TSelectDirectoryDialog
-    FileName = 'C:\!\arhivator\zlib'
-    Filter = 'Архив Zlib|*.zlib'
-    InitialDir = 'C:\!\arhivator\'
+    Filter = 'Все файлы|*.*|ZIP-архивы|*.zip'
+    Options = [ofAllowMultiSelect, ofEnableSizing, ofViewDetail]
     Left = 592
     Top = 48
+  end
+  object SelectDirectoryDialog1: TSelectDirectoryDialog
+    Filter = 'Архив Zlib|*.zlib'
+    Left = 592
+    Top = 104
+  end
+  object SaveDialog1: TSaveDialog
+    DefaultExt = '.zip'
+    Filter = 'IP-архивы|*.zip|Все файлы|*.*'
+    Left = 605
+    Top = 165
   end
 end

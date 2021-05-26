@@ -26,39 +26,31 @@
       <FormatVersion Value="2"/>
       <Modes Count="0"/>
     </RunParams>
-    <RequiredPackages Count="1">
+    <RequiredPackages Count="2">
       <Item1>
-        <PackageName Value="LCL"/>
+        <PackageName Value="LCLBase"/>
       </Item1>
+      <Item2>
+        <PackageName Value="LCL"/>
+      </Item2>
     </RequiredPackages>
-    <Units Count="5">
+    <Units Count="3">
       <Unit0>
         <Filename Value="arhivator.lpr"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
-        <Filename Value="unit1.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="Form1"/>
-        <ResourceBaseClass Value="Form"/>
-        <UnitName Value="MainUnit"/>
-      </Unit1>
-      <Unit2>
         <Filename Value="unitabout.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="FormAbout"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="UnitAbout"/>
-      </Unit2>
-      <Unit3>
+      </Unit1>
+      <Unit2>
         <Filename Value="zlib\zlibfunc.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit3>
-      <Unit4>
-        <Filename Value="C:\lazarus\fpc\3.2.0\source\packages\paszlib\src\gzio.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit4>
+      </Unit2>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -69,7 +61,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir);zlib"/>
-      <OtherUnitFiles Value="C:\lazarus\fpc\3.2.0\source\packages\paszlib\src\;zlib"/>
+      <OtherUnitFiles Value="zlib"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

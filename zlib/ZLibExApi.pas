@@ -1,17 +1,13 @@
 {*****************************************************************************
 *  ZLibExApi.pas                                                             *
 *                                                                            *
-*  copyright (c) 2010-2011 Nikolay Petrochenko                               *
+*  copyright (c) 2010 Nikolay Petrochenko                                    *
 *  copyright (c) 2000-2010 base2 technologies                                *
 *  copyright (c) 1995-2002 Borland Software Corporation                      *
 *                                                                            *
 *  revision history                                                          *
-*    04.06.2011  code cleanup, create Project page on Google Code            *
 *    13.12.2010  first version, compiled in Lazarus                          *
 *    20.04.2010  updated to zlib version 1.2.5                               *
-*                                                                            *
-*  License: Mozilla Public License версии 1.1                                *
-*           http://www.mozilla.org/MPL/MPL-1.1.html                          *
 *                                                                            *
 *****************************************************************************}
 
@@ -179,11 +175,17 @@ implementation
 *    make LOC=-DASMV OBJA=match.o -f makefile.gcc                            *
 *****************************************************************************}
 
-{$IFDEF FPC}
- {$IFDEF WIN32}
-  {$I win32-obj.inc}
- {$ENDIF}
-{$ENDIF}
+{$L Zlib\adler32.o}
+{$L Zlib\crc32.o}
+{$L Zlib\deflate.o}
+{$L Zlib\infback.o}
+{$L Zlib\inffast.o}
+{$L Zlib\inflate.o}
+{$L Zlib\inftrees.o}
+{$L Zlib\match.o}
+{$L Zlib\trees.o}
+{$L Zlib\zutil.o}
+
 
 function _malloc(Size: Integer): Pointer; cdecl; [public, alias: '_malloc'];
 begin
