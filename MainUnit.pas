@@ -5,7 +5,7 @@ unit MainUnit;
 interface
 
 uses
-  Classes, SysUtils, Forms, Dialogs, Menus, ComCtrls, FileCtrl,
+  Classes, SysUtils, Forms, Dialogs, Menus, ComCtrls,
   ExtCtrls, UnitAbout, FileUtil, LazFileUtils, Zipper, Controls, LazUTF8, LConvEncoding;
 
 const DefaultExt = '.zip';
@@ -72,7 +72,6 @@ type
     function GetDirectory(const FileName: string):TStringList;
     procedure SaveArchive(const FileName: string);
     procedure OpenArchiveFile(FileName:TFileName);
-    function GetBasePath:TFileName;
     procedure AddFile(fn:TFileName);
     procedure SetStatus;
     procedure SetCaptionAndArchiveFileName(FileName:TFilename);
@@ -141,12 +140,14 @@ begin
     begin
       AddFile(sl[i]);
     end;
+    SetStatus;
   end;
 end;
 
 procedure TFormMain.MenuItemDecompressAllFilesClick(Sender: TObject);
 begin
-
+  FilesList.SelectAll;
+  MenuItemDecompressSelectedClick(Sender);
 end;
 
 procedure TFormMain.FilesListDragDrop(Sender, Source: TObject; X, Y: Integer);
@@ -182,13 +183,6 @@ end;
 procedure TFormMain.FormActivate(Sender: TObject);
 begin
   SetStatus;
-end;
-
-
-function TFormMain.GetBasePath:TFileName;
-// Определяет общий путь упаковываемых фйлов и директорий верхнего уровня
-var i:integer;
-begin
 end;
 
 procedure TFormMain.MenuItemCompressDirectoryClick(Sender: TObject);
@@ -234,10 +228,36 @@ begin
   SetStatus;
 end;
 
+function EndPathCP866ToUTF8(AText:string):string;
+var
+  c,i:integer;
+  s,s1,s2,chr:string;
+begin
+  s:='';
+  c:=UTF8Length(AText);
+  for i:=c downto 1 do
+  begin
+       chr:=UTF8Copy(AText,i,1);
+       if ((not(chr='/')) and (not(chr='\')))or(i=c) then
+       begin
+            s:=UTF8Copy(AText,i,1)+s;
+       end
+       else begin
+            s:=UTF8Copy(AText,i,1)+s;
+            break;
+       end;
+  end;
+  dec(i);
+  s1:=UTF8Copy(AText,1,i);
+  s2:=CP866ToUTF8(s);
+  Result:=s1+s2;
+end;
+
 procedure TFormMain.MenuItemDecompressSelectedClick(Sender: TObject);
 var i:integer;
     fn:TFileName;
     uz:TUnZipper;
+    AArchiveFileName, ADiskFileName, ANewDiskFileName, UnPackFileDir:string;
 
 begin
   if (FilesList.Selected <> nil) and SelectDirectoryDialog1.Execute then
@@ -250,8 +270,24 @@ begin
           if FilesList.Items[i].Selected then
           begin
              fn := UTF8ToCP866(FilesList.Items[i].SubItems[3]);
+             AArchiveFileName:=fn;
              uz.UnZipFile(fn);
-             RenameFile(uz.OutputPath +'/' + fn, uz.OutputPath +'/' + FilesList.Items[i].Caption);
+              AArchiveFileName:=EndPathCP866ToUTF8(AArchiveFileName);
+              AArchiveFileName:=UTF8ToSys(AArchiveFileName);
+              UnPackFileDir :=SysUtils.IncludeTrailingPathDelimiter(uz.OutputPath);
+              ADiskFileName   :=UnPackFileDir+fn;
+              ANewDiskFileName:=uz.OutputPath+ExtractFileName(AArchiveFileName);
+              if FileExists(ADiskFileName) then
+              begin
+                 RenameFileUTF8(ADiskFileName, ANewDiskFileName);
+                 RemoveDir(ExtractFilePath(ADiskFileName));
+              end
+              else if DirectoryExists(ADiskFileName) then
+              begin
+                 ADiskFileName    :=SysUtils.IncludeTrailingPathDelimiter(ADiskFileName);
+                 ANewDiskFileName :=SysUtils.IncludeTrailingPathDelimiter(ANewDiskFileName);
+                 RenameFile(ADiskFileName, ANewDiskFileName);
+              end;
           end;
     finally
       uz.Free;
@@ -324,6 +360,53 @@ begin
   SetStatus;
 end;
 
+function UnPackFiles(Filename, UnPackPath: String): Integer;
+var
+  UnZipper          :TUnZipper; //PasZLib
+  UnPackFileDir,
+  ADiskFileName,
+  ANewDiskFileName,
+  AArchiveFileName  :String;
+  i                 :integer;
+begin
+  Result:=-1;
+  if FileExists(Filename)and DirectoryExists(UnPackPath) then
+  begin
+       UnPackFileDir :=SysUtils.IncludeTrailingPathDelimiter(UnPackPath);
+       UnZipper      :=TUnZipper.Create;
+       try
+          UnZipper.FileName   := Filename;
+          UnZipper.OutputPath := UnPackPath;
+          UnZipper.Examine;
+          UnZipper.UnZipAllFiles;
+
+          for i:=UnZipper.Entries.Count-1 downto 0 do
+          begin
+              AArchiveFileName:=UnZipper.Entries.Entries[i].ArchiveFileName;
+              AArchiveFileName:=EndPathCP866ToUTF8(AArchiveFileName);
+              AArchiveFileName:=UTF8ToSys(AArchiveFileName);
+              ANewDiskFileName:=UnPackFileDir+AArchiveFileName;
+              ADiskFileName   :=UnPackFileDir+UnZipper.Entries.Entries[i].DiskFileName;
+
+              if FileExists(ADiskFileName) then
+              begin
+                 RenameFile(ADiskFileName, ANewDiskFileName);
+              end
+              else if DirectoryExists(ADiskFileName) then
+              begin
+                 ADiskFileName    :=SysUtils.IncludeTrailingPathDelimiter(ADiskFileName);
+                 ANewDiskFileName :=SysUtils.IncludeTrailingPathDelimiter(ANewDiskFileName);
+                 RenameFile(ADiskFileName, ANewDiskFileName);
+              end;
+          end;
+
+          Result:=1;
+       finally
+          UnZipper.Free;
+       end;
+  end;
+end;
+
 procedure TFormMain.SaveArchive(const FileName: string);
 var zipper:TZipper;
     uz:TUnZipper;
@@ -350,6 +433,13 @@ begin
         fe.ArchiveFileName:=UTF8ToCP866(ExtractFileName(FilesList.Items[i].Caption));
       end;
       Zipper.ZipAllFiles;
+{      for i:=0 to FilesList.Items.Count-1 do
+      begin
+        FilesList.Items[i].SubItems[2]:='['+ ExtractFileName(FileName) +']';
+        FilesList.Items[i].SubItems[3]:=FilesList.Items[i].Caption;
+        FilesList.Items[i].SubItems[4]:='*';
+      end;
+}
     finally
         Zipper.Free;
         SetCaptionAndArchiveFileName(FileName);
@@ -359,9 +449,10 @@ begin
     // Добавить перепаковку при переименовании файлов
     begin
       CopyFile(ArchiveFileName, FileName);
-      SetCaptionAndArchiveFileName(FileName);
+{      SetCaptionAndArchiveFileName(FileName);
       for i:=0 to FilesList.Items.Count-1 do
         FilesList.Items[i].SubItems[2]:='['+ExtractFileName(ArchiveFileName)+']';
+}
     end;
     if not (AllFilesinArchive or AllFilesLocal) then
     // Перепаковка файлов через временную папку
@@ -369,14 +460,7 @@ begin
       fn:=GetTempFileName(GetTempDir,'Arc');
       CreateDir(fn);
       // Распаковка файлов во временную папку
-      uz:=TUnZipper.Create;
-      try
-        uz.FileName:=ArchiveFileName;
-        uz.OutputPath:=fn;
-        uz.UnZipAllFiles;
-      finally
-        uz.Free;
-      end;
+      UnPackFiles(ArchiveFileName, fn);
       // Архивация файлов из временной папки
       try
         Zipper := TZipper.Create;
@@ -386,23 +470,25 @@ begin
           if FilesList.Items[i].SubItems[4] ='' then // Локальный файл
           begin
             fe:=Zipper.Entries.AddFileEntry(FilesList.Items[i].SubItems[3]);
+{
             FilesList.Items[i].SubItems[2]:='['+ ExtractFileName(FileName) +']';
             FilesList.Items[i].SubItems[3]:=FilesList.Items[i].Caption;
             FilesList.Items[i].SubItems[4]:='*';
+}
           end
           else // Файл из архива находится во временной папке
-          fe:=Zipper.Entries.AddFileEntry(fn + '\' + FilesList.Items[i].SubItems[3]);
-//          fe.DiskFileName:=UTF8ToCP866(ExtractFileName(FilesList.Items[i].SubItems[3]));
+          fe:=Zipper.Entries.AddFileEntry(fn + DirectorySeparator + FilesList.Items[i].SubItems[3]);
           fe.ArchiveFileName:=UTF8ToCP866(ExtractFileName(FilesList.Items[i].Caption));
         end;
         Zipper.ZipAllFiles;
       finally
           Zipper.Free;
-          SetCaptionAndArchiveFileName(FileName);
+//          SetCaptionAndArchiveFileName(FileName);
       end;
       // Удаление временной папки
-      RemoveDir(fn);
+      DeleteDirectory(fn, False);
     end;
+    OpenArchiveFile(FileName);
 end;
 
 procedure TFormMain.MenuItemSaveArchiveClick(Sender: TObject);

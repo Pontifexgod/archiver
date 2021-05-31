@@ -8,7 +8,7 @@ object FormAbout: TFormAbout
   ClientHeight = 240
   ClientWidth = 320
   Position = poMainFormCenter
-  LCLVersion = '2.0.10.0'
+  LCLVersion = '2.0.12.0'
   object Image1: TImage
     Left = 0
     Height = 240
@@ -5831,6 +5831,7 @@ object FormAbout: TFormAbout
     Font.Quality = fqDraft
     ParentColor = False
     ParentFont = False
+    OnClick = Label1Click
   end
   object BitBtn1: TBitBtn
     Left = 96

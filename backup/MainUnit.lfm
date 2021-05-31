@@ -1,10 +1,10 @@
 object FormMain: TFormMain
   Left = 1071
-  Height = 383
+  Height = 384
   Top = 386
   Width = 693
   Caption = 'Archivator'
-  ClientHeight = 363
+  ClientHeight = 364
   ClientWidth = 693
   Constraints.MinHeight = 340
   Constraints.MinWidth = 500
@@ -14,22 +14,22 @@ object FormMain: TFormMain
   LCLVersion = '2.0.12.0'
   object Panel1: TPanel
     Left = 8
-    Height = 321
+    Height = 322
     Top = 8
     Width = 575
     Anchors = [akTop, akLeft, akRight, akBottom]
-    ClientHeight = 321
+    ClientHeight = 322
     ClientWidth = 575
     TabOrder = 0
     object Splitter1: TSplitter
       Left = 1
-      Height = 319
+      Height = 320
       Top = 1
       Width = 6
     end
     object FilesList: TListView
       Left = 7
-      Height = 319
+      Height = 320
       Top = 1
       Width = 567
       Align = alClient
@@ -75,7 +75,7 @@ object FormMain: TFormMain
   object StatusBar1: TStatusBar
     Left = 0
     Height = 23
-    Top = 340
+    Top = 341
     Width = 693
     Panels = <>
   end
