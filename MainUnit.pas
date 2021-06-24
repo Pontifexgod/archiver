@@ -6,10 +6,11 @@ interface
 
 uses
   Classes, SysUtils, Forms, Dialogs, Menus, ComCtrls,
-  ExtCtrls, UnitAbout, FileUtil, LazFileUtils, Zipper, Controls, LazUTF8, LConvEncoding;
+  ExtCtrls, UnitAbout, FileUtil, LazFileUtils, Zipper, Controls, LazUTF8, LConvEncoding, SettingsUnit, Registry;
 
 const DefaultExt = '.zip';
       ApplicationName = 'Archivator';
+      RegKeyName='Software\MyCompanyName\'+ ApplicationName +'\';
 
 type
   TFileInfo = record
@@ -46,16 +47,21 @@ type
     MenuItemExit: TMenuItem;
     OpenDialog1: TOpenDialog;
     Panel1: TPanel;
+    ProgressBar1: TProgressBar;
     SaveDialog1: TSaveDialog;
     SelectDirectoryDialog1: TSelectDirectoryDialog;
-    Splitter1: TSplitter;
     StatusBar1: TStatusBar;
+    AutoSaveTimer: TTimer;
+    procedure AutoSaveTimerTimer(Sender: TObject);
     procedure FilesListDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure FilesListEndDrag(Sender, Target: TObject; X, Y: Integer);
     procedure FilesListSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
     procedure FilesListStartDrag(Sender: TObject; var DragObject: TDragObject);
     procedure FormActivate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
+    procedure FormCreate(Sender: TObject);
     procedure MenuItemAddDirectoryClick(Sender: TObject);
     procedure MenuItemDecompressAllFilesClick(Sender: TObject);
     procedure MenuItemCompressDirectoryClick(Sender: TObject);
@@ -63,18 +69,25 @@ type
     procedure MenuItemAboutClick(Sender: TObject);
     procedure MenuItemCreateArchiveClick(Sender: TObject);
     procedure MenuItemDecompressSelectedClick(Sender: TObject);
+    procedure MenuItemDeleteClick(Sender: TObject);
     procedure MenuItemExitClick(Sender: TObject);
     procedure MenuItemOpenArchiveClick(Sender: TObject);
     procedure MenuItemSaveArchiveAsClick(Sender: TObject);
     procedure MenuItemSaveArchiveClick(Sender: TObject);
+    procedure MenuItemSettingsClick(Sender: TObject);
     procedure TreeView1SelectionChanged(Sender: TObject);
   private
+    currentfilecounter, totalfilescounter:integer;
     function GetDirectory(const FileName: string):TStringList;
     procedure SaveArchive(const FileName: string);
     procedure OpenArchiveFile(FileName:TFileName);
     procedure AddFile(fn:TFileName);
     procedure SetStatus;
     procedure SetCaptionAndArchiveFileName(FileName:TFilename);
+    procedure ProgressHandler(Sender : TObject; Const Pct: Double);
+    procedure RepackFiles(const FileName: string);
+    function SaveArchiveIfChanged:boolean;
+    function UnPackFiles(Filename, UnPackPath: String): Integer;
   public
 
   end;
@@ -82,6 +95,8 @@ type
 var
   FormMain: TFormMain;
   ArchiveFileName: TFileName = ''; // Имя и путь файла текущего архива
+  ArchiveChanged:Boolean=False; // Признак изменённого архива
+  AutoSaveEnabled:Boolean=False;
 
 implementation
 
@@ -132,6 +147,7 @@ var FullFileName:TFileName;
     sl:TStringList;
     i:integer;
 begin
+  SelectDirectoryDialog1.Title:='Выбор папки для добавления в архив';
   if SelectDirectoryDialog1.Execute then
   begin
     FullFileName:=SelectDirectoryDialog1.FileName;
@@ -155,6 +171,12 @@ begin
 
 end;
 
+procedure TFormMain.AutoSaveTimerTimer(Sender: TObject);
+begin
+  if AutoSaveEnabled and ArchiveChanged then
+     MenuItemSaveArchiveClick(nil);
+end;
+
 procedure TFormMain.FilesListEndDrag(Sender, Target: TObject; X, Y: Integer);
 begin
 
@@ -164,8 +186,9 @@ procedure TFormMain.SetStatus;
 begin
   MenuItemDecompressAllFiles.Enabled:=FilesList.Items.Count > 0;
   MenuItemSaveArchiveAs.Enabled:=FilesList.Items.Count > 0;
-  MenuItemSaveArchive.Enabled:=FilesList.Items.Count > 0;
+  MenuItemSaveArchive.Enabled:=ArchiveChanged;
   MenuItemDecompressSelected.Enabled:=FilesList.Selected <> nil;
+  MenuItemDelete.Enabled:=FilesList.Selected <> nil;
 end;
 
 procedure TFormMain.FilesListSelectItem(Sender: TObject; Item: TListItem;
@@ -183,6 +206,45 @@ end;
 procedure TFormMain.FormActivate(Sender: TObject);
 begin
   SetStatus;
+end;
+
+procedure TFormMain.FormClose(Sender: TObject; var CloseAction: TCloseAction);
+  var reg:TRegistry;
+      i, j:integer;
+begin
+  reg := TRegistry.Create(KEY_WRITE);
+  reg.RootKey := HKEY_CURRENT_USER;
+  reg.Access := KEY_WRITE;
+  if reg.OpenKey(regkeyname, true) then
+  begin
+    reg.WriteInteger('Top', Top);
+    reg.WriteInteger('Left', Left);
+    reg.WriteInteger('Width', Width);
+    reg.WriteInteger('Height', Height);
+    reg.WriteBool('AutoSave', AutoSaveEnabled);
+    reg.CloseKey;
+  end;
+end;
+
+procedure TFormMain.FormCloseQuery(Sender: TObject; var CanClose: boolean);
+begin
+   CanClose:=SaveArchiveIfChanged;
+end;
+
+procedure TFormMain.FormCreate(Sender: TObject);
+var reg:TRegistry;
+begin
+  reg := TRegistry.Create(KEY_READ);
+  reg.RootKey := HKEY_CURRENT_USER;
+  if reg.KeyExists(regkeyname) and reg.OpenKey(regkeyname, false) then
+  begin
+    Top:=reg.ReadInteger('Top');
+    Left:=reg.ReadInteger('Left');
+    Width:=reg.ReadInteger('Width');
+    Height:=reg.ReadInteger('Height');
+    AutoSaveEnabled:=reg.ReadBool('AutoSave');
+    reg.CloseKey;
+  end;
 end;
 
 procedure TFormMain.MenuItemCompressDirectoryClick(Sender: TObject);
@@ -203,12 +265,17 @@ begin
   li.SubItems.Add(ExtractFilePath(fn));
   li.SubItems.Add(fn);
   li.SubItems.Add(''); // Файл локальный
+  ArchiveChanged:=True;
+  AutoSaveTimer.Enabled:=False;
+  AutoSaveTimer.Enabled:=True;
+  SetStatus;
 end;
 
 procedure TFormMain.MenuItemAppendFileClick(Sender: TObject);
 var i:integer;
 begin
   OpenDialog1.FilterIndex:=1;
+  OpenDialog1.Title:='Выбор файла для добавления в архив';
   If OpenDialog1.Execute then
     for i:=0 to OpenDialog1.Files.Count-1 do
         AddFile(OpenDialog1.Files[i]);
@@ -219,13 +286,35 @@ begin
   formabout.showmodal;
 end;
 
+function TFormMain.SaveArchiveIfChanged:boolean;
+var mr:TModalResult;
+begin
+  if ArchiveChanged then
+  begin
+    mr:= MessageDlg('Запрос на сохранение архива', 'Архив был изменён, сохранить?',
+    mtConfirmation, mbYesNoCancel, 0);
+    case mr of
+         mrYes: MenuItemSaveArchiveClick(nil);
+         mrNo:  begin
+                  Result:=True;
+                  exit;
+                end;
+    end;
+  end;
+  Result:=not ArchiveChanged;
+end;
+
 procedure TFormMain.MenuItemCreateArchiveClick(Sender: TObject);
 begin
-  FilesList.ClearSelection;
-  FilesList.Clear;
-  ArchiveFileName:='';
-  Caption:=ApplicationName;
-  SetStatus;
+  if SaveArchiveIfChanged then
+  begin
+    FilesList.ClearSelection;
+    FilesList.Clear;
+    ArchiveFileName:='';
+    Caption:=ApplicationName;
+    ArchiveChanged:=False;
+    SetStatus;
+  end;
 end;
 
 function EndPathCP866ToUTF8(AText:string):string;
@@ -253,6 +342,14 @@ begin
   Result:=s1+s2;
 end;
 
+procedure TFormMain.ProgressHandler(Sender : TObject; Const Pct: Double);
+begin
+  Progressbar1.Position := Round(((pct + currentfilecounter)/totalfilescounter) * 100);
+  ProgressBar1.Update;
+  Application.ProcessMessages;
+end;
+
+
 procedure TFormMain.MenuItemDecompressSelectedClick(Sender: TObject);
 var i:integer;
     fn:TFileName;
@@ -260,18 +357,26 @@ var i:integer;
     AArchiveFileName, ADiskFileName, ANewDiskFileName, UnPackFileDir:string;
 
 begin
+  SelectDirectoryDialog1.Title:='Выбор папки для распаковки выбранных файлов';
   if (FilesList.Selected <> nil) and SelectDirectoryDialog1.Execute then
   begin
     uz:=TUnZipper.Create;
     try
+      uz.OnProgress:=@ProgressHandler;
+      uz.OnPercent:=1;
+      ProgressBar1.Position:=0;
+      ProgressBar1.Visible:=True;
       uz.FileName:=ArchiveFileName;
       uz.OutputPath:=SelectDirectoryDialog1.FileName;
+      totalfilescounter:=FilesList.SelCount;
+      currentfilecounter:=1;
       for i:=0 to FilesList.Items.Count - 1 do
           if FilesList.Items[i].Selected then
           begin
-             fn := UTF8ToCP866(FilesList.Items[i].SubItems[3]);
-             AArchiveFileName:=fn;
-             uz.UnZipFile(fn);
+              fn := UTF8ToCP866(FilesList.Items[i].SubItems[3]);
+              AArchiveFileName:=fn;
+              uz.UnZipFile(fn);
+              inc(currentfilecounter);
               AArchiveFileName:=EndPathCP866ToUTF8(AArchiveFileName);
               AArchiveFileName:=UTF8ToSys(AArchiveFileName);
               UnPackFileDir :=SysUtils.IncludeTrailingPathDelimiter(uz.OutputPath);
@@ -290,8 +395,26 @@ begin
               end;
           end;
     finally
+      ProgressBar1.Visible:=False;
       uz.Free;
     end;
+  end;
+end;
+
+procedure TFormMain.MenuItemDeleteClick(Sender: TObject);
+var i:integer;
+begin
+  if FilesList.Selected <> nil then
+  begin
+    for i:=FilesList.Items.Count - 1 downto 0 do
+      if FilesList.Items[i].Selected then
+      begin
+        FilesList.Items[i].Delete;
+        ArchiveChanged:=True;
+        AutoSaveTimer.Enabled:=False;
+        AutoSaveTimer.Enabled:=True;
+      end;
+    SetStatus;
   end;
 end;
 
@@ -352,15 +475,19 @@ end;
 
 procedure TFormMain.MenuItemOpenArchiveClick(Sender: TObject);
 begin
-  OpenDialog1.FilterIndex:=2;
-  If OpenDialog1.Execute then
+  if SaveArchiveIfChanged then
   begin
-    OpenArchiveFile(OpenDialog1.FileName);
+    OpenDialog1.FilterIndex:=2;
+    OpenDialog1.Title:='Открытие архива';
+    If OpenDialog1.Execute then
+    begin
+      OpenArchiveFile(OpenDialog1.FileName);
+    end;
+    SetStatus;
   end;
-  SetStatus;
 end;
 
-function UnPackFiles(Filename, UnPackPath: String): Integer;
+function TFormMain.UnPackFiles(Filename, UnPackPath: String): Integer;
 var
   UnZipper          :TUnZipper; //PasZLib
   UnPackFileDir,
@@ -377,9 +504,14 @@ begin
        try
           UnZipper.FileName   := Filename;
           UnZipper.OutputPath := UnPackPath;
+          UnZipper.OnProgress:=@ProgressHandler;
+          UnZipper.OnPercent:=1;
+          ProgressBar1.Position:=0;
+          ProgressBar1.Visible:=True;
+          totalfilescounter:=1;
+          currentfilecounter:=1;
           UnZipper.Examine;
           UnZipper.UnZipAllFiles;
-
           for i:=UnZipper.Entries.Count-1 downto 0 do
           begin
               AArchiveFileName:=UnZipper.Entries.Entries[i].ArchiveFileName;
@@ -387,7 +519,6 @@ begin
               AArchiveFileName:=UTF8ToSys(AArchiveFileName);
               ANewDiskFileName:=UnPackFileDir+AArchiveFileName;
               ADiskFileName   :=UnPackFileDir+UnZipper.Entries.Entries[i].DiskFileName;
-
               if FileExists(ADiskFileName) then
               begin
                  RenameFile(ADiskFileName, ANewDiskFileName);
@@ -399,11 +530,53 @@ begin
                  RenameFile(ADiskFileName, ANewDiskFileName);
               end;
           end;
-
           Result:=1;
        finally
           UnZipper.Free;
+          ProgressBar1.Visible:=False;
        end;
+  end;
+end;
+
+procedure TFormMain.RepackFiles(const FileName: string);
+var fn:TFileName;
+    Zipper : TZipper;
+    i:integer;
+    fe:TZipFileEntry;
+begin
+  begin
+    fn:=GetTempFileName(GetTempDir,'Arc');
+    CreateDir(fn);
+    // Распаковка файлов во временную папку
+    UnPackFiles(ArchiveFileName, fn);
+    // Архивация файлов из временной папки
+    try
+      Zipper := TZipper.Create;
+      Zipper.FileName := FileName;
+      Zipper.OnProgress:=@ProgressHandler;
+      Zipper.OnPercent:=1;
+      ProgressBar1.Position:=0;
+      ProgressBar1.Visible:=True;
+      totalfilescounter:=1;
+      currentfilecounter:=1;
+      for i:=0 to FilesList.Items.Count-1 do
+      begin
+        if FilesList.Items[i].SubItems[4] ='' then // Локальный файл
+        begin
+          fe:=Zipper.Entries.AddFileEntry(FilesList.Items[i].SubItems[3]);
+        end
+        else // Файл из архива находится во временной папке
+        fe:=Zipper.Entries.AddFileEntry(fn + DirectorySeparator + FilesList.Items[i].SubItems[3]);
+        fe.ArchiveFileName:=UTF8ToCP866(ExtractFileName(FilesList.Items[i].Caption));
+      end;
+      Zipper.ZipAllFiles;
+    finally
+        Zipper.Free;
+        ProgressBar1.Style:=pbstMarquee;
+//          SetCaptionAndArchiveFileName(FileName);
+    end;
+    // Удаление временной папки
+    DeleteDirectory(fn, False);
   end;
 end;
 
@@ -427,68 +600,44 @@ begin
     try
       Zipper := TZipper.Create;
       Zipper.FileName := FileName;
+      Zipper.OnProgress:=@ProgressHandler;
+      Zipper.OnPercent:=1;
+      ProgressBar1.Position:=0;
+      ProgressBar1.Visible:=True;
+      totalfilescounter:=FilesList.Items.Count;
       for i:=0 to FilesList.Items.Count-1 do
       begin
+        currentfilecounter:=i + 1;
         fe:=Zipper.Entries.AddFileEntry(FilesList.Items[i].SubItems[3]);
         fe.ArchiveFileName:=UTF8ToCP866(ExtractFileName(FilesList.Items[i].Caption));
       end;
       Zipper.ZipAllFiles;
-{      for i:=0 to FilesList.Items.Count-1 do
-      begin
-        FilesList.Items[i].SubItems[2]:='['+ ExtractFileName(FileName) +']';
-        FilesList.Items[i].SubItems[3]:=FilesList.Items[i].Caption;
-        FilesList.Items[i].SubItems[4]:='*';
-      end;
-}
     finally
         Zipper.Free;
         SetCaptionAndArchiveFileName(FileName);
+        ProgressBar1.Visible:=False;
     end;
     // Все файлы только в архиве
-    if AllFilesinArchive and (FileName<>ArchiveFileName) then
-    // Добавить перепаковку при переименовании файлов
-    begin
-      CopyFile(ArchiveFileName, FileName);
-{      SetCaptionAndArchiveFileName(FileName);
-      for i:=0 to FilesList.Items.Count-1 do
-        FilesList.Items[i].SubItems[2]:='['+ExtractFileName(ArchiveFileName)+']';
-}
-    end;
+    if AllFilesinArchive and ArchiveChanged then // Состав файлов в архиве изменился, надо перепаковывать
+        RepackFiles(FileName);
+    if AllFilesinArchive and (FileName<>ArchiveFileName) and not ArchiveChanged then
+      // Все файлы в архиве и не изменялись, не надо перепаковывать
+      begin
+        ProgressBar1.Visible:=True;
+        ProgressBar1.Style:=pbstMarquee;
+        ProgressBar1.Position:=50;
+        CopyFile(ArchiveFileName, FileName); // Просто копируем архив
+        ProgressBar1.Visible:=False;
+        ProgressBar1.Style:=pbstNormal;
+      end;
     if not (AllFilesinArchive or AllFilesLocal) then
     // Перепаковка файлов через временную папку
-    begin
-      fn:=GetTempFileName(GetTempDir,'Arc');
-      CreateDir(fn);
-      // Распаковка файлов во временную папку
-      UnPackFiles(ArchiveFileName, fn);
-      // Архивация файлов из временной папки
-      try
-        Zipper := TZipper.Create;
-        Zipper.FileName := FileName;
-        for i:=0 to FilesList.Items.Count-1 do
-        begin
-          if FilesList.Items[i].SubItems[4] ='' then // Локальный файл
-          begin
-            fe:=Zipper.Entries.AddFileEntry(FilesList.Items[i].SubItems[3]);
-{
-            FilesList.Items[i].SubItems[2]:='['+ ExtractFileName(FileName) +']';
-            FilesList.Items[i].SubItems[3]:=FilesList.Items[i].Caption;
-            FilesList.Items[i].SubItems[4]:='*';
-}
-          end
-          else // Файл из архива находится во временной папке
-          fe:=Zipper.Entries.AddFileEntry(fn + DirectorySeparator + FilesList.Items[i].SubItems[3]);
-          fe.ArchiveFileName:=UTF8ToCP866(ExtractFileName(FilesList.Items[i].Caption));
-        end;
-        Zipper.ZipAllFiles;
-      finally
-          Zipper.Free;
-//          SetCaptionAndArchiveFileName(FileName);
-      end;
-      // Удаление временной папки
-      DeleteDirectory(fn, False);
-    end;
+      RepackFiles(FileName);
     OpenArchiveFile(FileName);
+    ProgressBar1.Visible:=False;
+    ProgressBar1.Style:=pbstNormal;
+    ArchiveChanged:=False;
+    SetStatus;
 end;
 
 procedure TFormMain.MenuItemSaveArchiveClick(Sender: TObject);
@@ -498,8 +647,18 @@ begin
   else SaveArchive(ArchiveFileName);
 end;
 
+procedure TFormMain.MenuItemSettingsClick(Sender: TObject);
+begin
+  SettingsForm.AutoSaveCheckBox.Checked:=AutoSaveEnabled;
+  if SettingsForm.ShowModal = mrOk then
+  begin
+    AutoSaveEnabled:=SettingsForm.AutoSaveCheckBox.Checked;
+  end;
+end;
+
 procedure TFormMain.MenuItemSaveArchiveAsClick(Sender: TObject);
 begin
+  SaveDialog1.Title:='Сохранение архива';
   If SaveDialog1.Execute then
     SaveArchive(SaveDialog1.FileName);
 end;

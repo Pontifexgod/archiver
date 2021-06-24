@@ -7,7 +7,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, MainUnit, UnitAbout, zlibfunc;
+  Forms, MainUnit, UnitAbout, zlibfunc, SettingsUnit;
 
 {$R *.res}
 
@@ -17,6 +17,7 @@ begin
   Application.Initialize;
   Application.CreateForm(TFormMain, FormMain);
   Application.CreateForm(TFormAbout, FormAbout);
+  Application.CreateForm(TSettingsForm, SettingsForm);
   Application.Run;
 end.
 
